@@ -108,6 +108,15 @@
                                              (cdddr returns_stack)
                                              (cdr returns_stack)) defs))
             ((equal? word 'continue) (helper (skeeper-count-wend program i) _stack returns_stack defs))
+            ((equal? word 'defvar)(helper (+ i 3)  _stack
+                                           returns_stack
+                                           (cons (list (vector-ref program (+ i 1)) (vector-ref program (+ i 2)) 'glob) defs)))
+            ((and (assoc word defs) (= (length (assoc word defs)) 3))(helper (+ i 1) (cons (cadr (assoc word defs)) _stack)
+                                                            returns_stack defs)) 
+            ((equal? word 'set)(begin
+                                 (set-car! (cdr (assoc (vector-ref program (+ i 1)) defs))
+                                                  (car _stack))
+                                 (helper (+ i 2) (cdr _stack) returns_stack defs)))
             (else(helper (cadr (assoc word defs)) _stack (cons (+ i 1) returns_stack) defs))))))
           
           
