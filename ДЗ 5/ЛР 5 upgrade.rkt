@@ -4,6 +4,7 @@
 'feature-for-loop
 'feature-break-continue
 'feature-nested-if
+'feature-global
 
 
 (define (def-arifm-oper oper)
