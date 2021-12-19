@@ -5,6 +5,9 @@
 'feature-break-continue
 'feature-nested-if
 'feature-global
+'feature-tail-call
+
+
 
 
 (define (def-arifm-oper oper)
@@ -56,7 +59,9 @@
         ((and(equal? word 'endif)(= depth 1)) ind)
         ((equal? word 'endif) (loop (+ ind 1) (- depth 1)))
         (else (loop (+ ind 1) depth))))))
-        
+
+
+
       
        
 (define (interpret program stack)
@@ -106,18 +111,19 @@
                                      (helper (+ 1 i) _stack (cdddr returns_stack) defs)))
             ((equal? word 'break) (helper (+ (skeeper-count-wend program i) 1) _stack
                                           (if (equal?(vector-ref program (skeeper-count-wend program i)) 'next)
-                                             (cdddr returns_stack)
-                                             (cdr returns_stack)) defs))
+                                              (cdddr returns_stack)
+                                              (cdr returns_stack)) defs))
             ((equal? word 'continue) (helper (skeeper-count-wend program i) _stack returns_stack defs))
             ((equal? word 'defvar)(helper (+ i 3)  _stack
-                                           returns_stack
-                                           (cons (list (vector-ref program (+ i 1)) (vector-ref program (+ i 2)) 'glob) defs)))
+                                          returns_stack
+                                          (cons (list (vector-ref program (+ i 1)) (vector-ref program (+ i 2)) 'glob) defs)))
             ((and (assoc word defs) (= (length (assoc word defs)) 3))(helper (+ i 1) (cons (cadr (assoc word defs)) _stack)
-                                                            returns_stack defs)) 
+                                                                             returns_stack defs)) 
             ((equal? word 'set)(begin
                                  (set-car! (cdr (assoc (vector-ref program (+ i 1)) defs))
-                                                  (car _stack))
+                                           (car _stack))
                                  (helper (+ i 2) (cdr _stack) returns_stack defs)))
+            ((equal? word 'tail)(helper (cadr(assoc (vector-ref program (+ i 1)) defs)) _stack returns_stack defs))
             (else(helper (cadr (assoc word defs)) _stack (cons (+ i 1) returns_stack) defs))))))
           
           
