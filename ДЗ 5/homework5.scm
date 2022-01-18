@@ -6,7 +6,6 @@
 'feature-repeat-loop
 'feature-for-loop
 'feature-break-continue
-'feature-nested-if
 'feature-global
 'feature-tail-call
 
@@ -17,8 +16,7 @@
   (cond
     ((equal? oper '+) '+)
     ((equal? oper '-) '-)
-    ((equal? oper '*) '*)
-    ((equal? oper '/) '/)))
+    ((equal? oper '*) '*)))
 
 (define (comp-oper? oper)
   (or
@@ -76,32 +74,33 @@
             ((number? word) (helper (+ i 1) (cons word _stack) returns_stack defs))
             ((equal? word (def-arifm-oper word))(helper (+ i 1)
                                                         (replace (eval(list word (cadr _stack) (car _stack))ie) _stack) returns_stack defs))
+            ((equal? word '/) (helper (+ i 1) (cons (quotient (cadr _stack) (car _stack)) (cddr _stack)) returns_stack defs))
             ((equal? word 'neg) (helper (+ i 1) (cons (-(car _stack)) (cdr _stack)) returns_stack defs))
-            ((equal? word 'mod) (helper (+ i 1) (replace (remainder (cadr _stack) (car _stack)) _stack)returns_stack defs))
+            ((equal? word 'mod) (helper (+ i 1) (cons (remainder (cadr _stack) (car _stack)) (cddr _stack))returns_stack defs))
             ((comp-oper? word) (helper (+ i 1) (replace (make-log-oper word _stack) _stack) returns_stack defs))
             ((equal? word 'not) (helper (+ i 1) (cons (if (= (car _stack) 0) -1 0) (cdr _stack)) returns_stack defs))
-            ((equal? word 'and) (helper (+ i 1) (cons (if (and (= (car _stack) 0) (= (cadr _stack) 0)) -1 0) (cddr _stack)) returns_stack defs))
-            ((equal? word 'or) (helper (+ i 1) (cons (if (or (= (car _stack) 0) (= (cadr _stack) 0)) -1 0) (cddr _stack)) returns_stack defs))
+            ((equal? word 'and) (helper (+ i 1) (cons (if (or (= (car _stack) 0) (= (cadr _stack) 0))0 -1) (cddr _stack)) returns_stack defs))
+            ((equal? word 'or) (helper (+ i 1) (cons (if (and (= (car _stack) 0) (= (cadr _stack) 0)) 0 -1) (cddr _stack)) returns_stack defs))
             ((equal? word 'drop) (helper (+ i 1) (cdr _stack) returns_stack defs))
             ((equal? word 'swap) (helper (+ i 1) (append (cons (cadr _stack) (list (car _stack))) (cddr _stack)) returns_stack defs))
             ((equal? word 'dup) (helper (+ i 1) (cons (car _stack) _stack) returns_stack defs))
             ((equal? word 'over) (helper (+ i 1) (cons (cadr _stack) _stack)returns_stack defs))
             ((equal? word 'rot) (helper (+ i 1) (append (list (caddr _stack) (cadr _stack) (car _stack)) (cdddr _stack)) returns_stack defs))
-            ((equal? word 'depth) (length _stack))
+            ((equal? word 'depth) (cons (length _stack) _stack))
             ((equal? word 'define) (helper (+ (skeeper-count program i) 1) _stack returns_stack
                                            (cons (list (vector-ref program (+ i 1)) (+ i 2)) defs)))
             ((or(equal? word 'end) (equal? word 'exit)) (helper (car returns_stack) _stack (cdr returns_stack) defs))
             ((equal? word 'if) (helper
                                 (if (equal? (car _stack) 0)
-                                    (nested-ifer program i)
+                                    (+ (skeeper-count-if program i) 1)
                                     (+ i 1)) (cdr _stack) returns_stack defs))
             ((equal? word 'endif) (helper (+ i 1) _stack returns_stack defs))
-            ((equal? word 'else) (helper (+ (skeeper-count-if program i) 1) _stack returns_stack defs))
+            ((equal? word 'else) (helper (+ (skeeper-count-if program (+ i 1)) 1) _stack returns_stack defs))
             ((equal? word 'while)(if (zero? (car _stack))
                                      (helper (+ (skeeper-count-wend program i) 1) (cdr _stack) returns_stack defs)
                                      (helper (+ i 1) (cdr _stack) (cons i returns_stack) defs)))
             ((equal? word 'wend) (helper (car returns_stack) _stack (cdr returns_stack) defs))
-            ((equal? word 'repeat)(helper (+ i 1) _stack (cons (+ i 1) returns_stack) defs))
+            ((equal? word 'repeat)(helper (+ i 1) _stack (cons i returns_stack) defs))
             ((equal? word 'until) (if (zero? (car _stack))
                                       (helper (car returns_stack) (cdr _stack) (cdr returns_stack) defs)
                                       (helper (+ i 1) (cdr _stack) (cdr returns_stack) defs)))

@@ -60,7 +60,7 @@
   
   (define (correctBrackets?)
     (let loop ((i ind) (deapth 1))
-      (and (isIndex?)
+      (and (not(= i (length tokens)))
            (let ((word (list-ref tokens i)))
              (cond
                ((and (equal? word ")") (= deapth 1)))

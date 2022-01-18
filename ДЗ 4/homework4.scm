@@ -1,4 +1,4 @@
-(use-syntax (ice-9 syncase))
+
 
 (define (memoized-factorial n)
   (let ((known-results '()))
@@ -34,7 +34,7 @@
 
 (define (lazy-ref xs k)
   (define (loop xs n)
-    (if (= n (- k 1))
+    (if (= n k)
         (lazy-car xs)
         (loop (lazy-cdr xs) (+ n 1))))
   (loop xs 0))
@@ -52,22 +52,20 @@
 
 ;3------------------------------------------------------------------
 
-(define (read-words file)
-  (let ((x (open-input-file file)))
+(define (read-words)
     (define (loop c word ans)
-      (if (eof-object? (peek-char x))
+      (if (eof-object? (peek-char))
           (begin
-            (close-input-port x)
             (if (> c 0)
                 (reverse (cons word ans))
                 (reverse ans)))
-          (let ((char (read-char x)))
+          (let ((char (read-char)))
             (if (char-whitespace? char)
                 (if (> c 0)
                     (loop 0 "" (cons word ans))
                     (loop 0 "" ans))
                 (loop (+ c 1) (string-append word (string char)) ans)))))
-    (loop 0 "" '())))
+    (loop 0 "" '()))
 
 ;4------------------------------------------------------------------
 
@@ -82,7 +80,7 @@
                      `(,(list 'struct 'name) ,(list 'f_n1 f_n1) ...)))ie)
        (eval (list 'define (string->symbol (string-append (symbol->string 'name) "?"))
                    (lambda (var)
-                     (and (list? var) (not (null? var)) (equal? (caar var) 'struct) (equal? (cadar var) 'name)))) ie)
+                     (and (list? var) (not (null? var)) (list? (car var)) (equal? (caar var) 'struct) (equal? (cadar var) 'name)))) ie)
        (eval (list 'define (string->symbol (string-append (symbol->string 'name) "-" (symbol->string 'f_n1)))
                    (lambda (var)
                      (let ((res (assoc 'f_n1 (cdr var))))
@@ -95,23 +93,3 @@
 
 
 
-(define-syntax define-data
-  (syntax-rules()
-    ((define-data name ((f_n1 par ...) ...))
-     (begin
-       (eval (list 'define 'f_n1
-                   (lambda (par ...)
-                     `(,(list 'data 'name),(list 'type 'f_n1) ,(list 'par par) ...)))ie) ...
-       (eval (list 'define (string->symbol (string-append (symbol->string 'name) "?"))
-                   (lambda (var)
-                     (and (list? var) (not (null? var)) (equal? (caar var) 'data)
-                          (equal? (cadar var) 'name)))) ie)))))
-
-(define-syntax match
-  (syntax-rules()
-    ((match var ((f_n1 par ...) expr) ...)
-     (cond
-       ((equal? (cadadr var) 'f_n1)
-        (let ((par (cadr(assoc 'par var))) ...) expr))
-       ...
-       (else var)))))
